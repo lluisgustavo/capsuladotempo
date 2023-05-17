@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { User } from 'lucide-react'
 import logo from '../assets/logo.svg'
+import { Copyright } from '@/components/Copyright'
 
 export default function Home() {
   return (
@@ -15,7 +16,7 @@ export default function Home() {
 
         {/* Sign In */}
         <Link
-          href=""
+          href={`https://github.com/login/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID}`}
           className="flex items-center gap-3 text-left transition-colors hover:text-orange-50"
         >
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-400">
@@ -47,18 +48,7 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Copyright */}
-        <div className="text-sm leading-relaxed text-gray-200">
-          Feito com 💜 no NLW da{' '}
-          <Link
-            target="_blank"
-            rel="noreferrer"
-            href="https://rocketseat.com.br"
-            className="underline hover:text-gray-100"
-          >
-            Rocketseat
-          </Link>
-        </div>
+        <Copyright />
       </div>
       {/* Right */}
       <div className="flex flex-col items-center justify-center bg-[url(../assets/bg-stars.svg)] bg-cover">
