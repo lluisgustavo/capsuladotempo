@@ -8,17 +8,20 @@ import {
   Image,
 } from 'react-native'
 import Logo from '../src/assets/logo.svg'
-import { Link } from 'expo-router'
+import { Link, useRouter } from 'expo-router'
 import Icon from '@expo/vector-icons/Feather'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useState } from 'react'
 import * as ImagePicker from 'expo-image-picker'
+import * as SecureStore from 'expo-secure-store'
+import { api } from '../src/lib/api'
 
 export default function NewMemory() {
   const { bottom, top } = useSafeAreaInsets()
   const [preview, setPreview] = useState<string | null>(null)
   const [isPublic, setIsPublic] = useState<boolean>(false)
   const [content, setContent] = useState('')
+  const router = useRouter()
 
   async function openImagePicker() {
     try {
@@ -32,7 +35,46 @@ export default function NewMemory() {
     } catch (err) {}
   }
 
-  function handleCreateMemory() {}
+  async function handleCreateMemory() {
+    const token = await SecureStore.getItemAsync('token')
+
+    let coverUrl = ''
+
+    if (preview) {
+      const uploadFormData = new FormData()
+
+      uploadFormData.append('file', {
+        uri: preview,
+        name: 'image.jpg',
+        type: 'image/jpeg',
+      } as any)
+
+      const uploadResponse = await api.post('/upload', uploadFormData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+
+      coverUrl = uploadResponse.data.fileUrl
+    }
+
+    await api.post(
+      '/memories',
+      {
+        coverUrl,
+        content,
+        isPublic,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+
+    router.push('/memories')
+  }
+
   return (
     <ScrollView
       className="flex-1 px-8"
