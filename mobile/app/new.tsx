@@ -121,22 +121,19 @@ export default function NewMemory() {
         >
           {preview && type !== null ? (
             type === 'image' ? (
-              <View className="flex-row items-center gap-2">
-                <Image
-                  source={{ uri: preview }}
-                  className="h-full w-full rounded-lg object-cover"
-                  alt="Preview"
-                />
-              </View>
+              <Image
+                source={{ uri: preview }}
+                className="aspect-video h-full w-full rounded-lg object-cover"
+                alt="Preview"
+              />
             ) : (
-              <View className="h-full flex-row items-center justify-center gap-2">
+              <View className="flex items-center justify-center">
                 <Video
                   ref={video}
-                  className="h-full w-full rounded-lg object-cover"
+                  className="aspect-video h-full w-full rounded-lg object-cover"
                   source={{
                     uri: preview,
                   }}
-                  useNativeControls
                   resizeMode={ResizeMode.CONTAIN}
                   isLooping
                   onPlaybackStatusUpdate={(status) =>
