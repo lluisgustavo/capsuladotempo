@@ -6,12 +6,14 @@ import {
   TouchableOpacity,
   View,
   Image,
+  Button,
 } from 'react-native'
 import Logo from '../src/assets/logo.svg'
 import { Link, useRouter } from 'expo-router'
 import Icon from '@expo/vector-icons/Feather'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { AVPlaybackStatus, ResizeMode, Video } from 'expo-av'
 import * as ImagePicker from 'expo-image-picker'
 import * as SecureStore from 'expo-secure-store'
 import { api } from '../src/lib/api'
@@ -21,6 +23,9 @@ export default function NewMemory() {
   const [preview, setPreview] = useState<string | null>(null)
   const [isPublic, setIsPublic] = useState<boolean>(false)
   const [content, setContent] = useState('')
+  const [type, setType] = useState<string | null>(null)
+  const video = useRef<Video>(null)
+  const [videoStatus, setVideoStatus] = useState<AVPlaybackStatus | null>(null)
   const router = useRouter()
 
   async function openImagePicker() {
@@ -29,10 +34,14 @@ export default function NewMemory() {
         mediaTypes: ImagePicker.MediaTypeOptions.All,
         quality: 1,
       })
-      if (result.assets[0]) {
+
+      if (result?.assets[0]) {
         setPreview(result.assets[0].uri)
+        setType(result.assets[0].type)
       }
-    } catch (err) {}
+    } catch (err) {
+      // console.log(err)
+    }
   }
 
   async function handleCreateMemory() {
@@ -45,8 +54,8 @@ export default function NewMemory() {
 
       uploadFormData.append('file', {
         uri: preview,
-        name: 'image.jpg',
-        type: 'image/jpeg',
+        name: type === 'video' ? 'video.mp4' : 'image.jpg',
+        type: type === 'video' ? 'video/mp4' : 'image/jpeg',
       } as any)
 
       const uploadResponse = await api.post('/upload', uploadFormData, {
@@ -110,12 +119,46 @@ export default function NewMemory() {
           className="h-32 items-center justify-center rounded-lg border border-dashed border-gray-500 bg-black/20"
           onPress={openImagePicker}
         >
-          {preview ? (
-            <Image
-              source={{ uri: preview }}
-              className="h-full w-full rounded-lg object-cover"
-              alt="Preview"
-            />
+          {preview && type !== null ? (
+            type === 'image' ? (
+              <View className="flex-row items-center gap-2">
+                <Image
+                  source={{ uri: preview }}
+                  className="h-full w-full rounded-lg object-cover"
+                  alt="Preview"
+                />
+              </View>
+            ) : (
+              <View className="h-full flex-row items-center justify-center gap-2">
+                <Video
+                  ref={video}
+                  className="h-full w-full rounded-lg object-cover"
+                  source={{
+                    uri: preview,
+                  }}
+                  useNativeControls
+                  resizeMode={ResizeMode.CONTAIN}
+                  isLooping
+                  onPlaybackStatusUpdate={(status) =>
+                    setVideoStatus(() => status)
+                  }
+                />
+                <View className="absolute self-center">
+                  <Button
+                    title={
+                      videoStatus?.isLoaded && videoStatus.isPlaying
+                        ? 'Pause'
+                        : 'Play'
+                    }
+                    onPress={() =>
+                      videoStatus?.isLoaded && videoStatus.isPlaying
+                        ? video.current.pauseAsync()
+                        : video.current.playAsync()
+                    }
+                  />
+                </View>
+              </View>
+            )
           ) : (
             <View className="flex-row items-center gap-2">
               <Icon name="image" color="#fff" />
